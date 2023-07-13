@@ -1,5 +1,7 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using System;
 using System.Collections.Generic;
@@ -7,15 +9,16 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-public class Diceroller : BaseCommandModule
+public class SlashDiceroller : ApplicationCommandModule
 {
     // Class-level variable for includeExpression
     public bool includeExpression = true;
 
     [Command("Roll")]
-    public async Task RollCommand(CommandContext ctx, [RemainingText] string input)
+    public async Task RollCommand(InteractionContext ctx, [RemainingText] string option)
     {
-        if (input.Trim().Equals("help", StringComparison.OrdinalIgnoreCase))
+        Console.WriteLine("Test2");
+        if (option.Trim().Equals("help", StringComparison.OrdinalIgnoreCase))
         {
             // Help message handling
             string helpMessage = "Dice Roller Help:\n\n"
@@ -28,44 +31,44 @@ public class Diceroller : BaseCommandModule
                 + "- Do note, the optional adjustment values can be entered as negatives, (e.g., `i-2` or `o-8`)\n\n"
                 + "Example: `3 2d6 i+1 o+2 g+3`\n\n";
 
-            await ctx.RespondAsync(helpMessage);
-            return;
+            Console.WriteLine("Help message executed");
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(helpMessage).AsEphemeral(true));
         }
         else
         {
-            // Check if input ends with "-ex" to set includeExpression
-            includeExpression = !input.Trim().EndsWith("-ex");
+            // Check if option ends with "-ex" to set includeExpression
+            includeExpression = !option.Trim().EndsWith("-ex");
 
             bool success = false;
 
             try
             {
-                string adjustedRoll = DiceRand(input);
+                string adjustedRoll = Diceroller.DiceRand(option);
                 success = true;
 
                 // Split the output into smaller chunks
-                var chunks = SplitTextIntoChunks(adjustedRoll, input, ctx);
+                var chunks = Diceroller.SplitTextIntoChunks(adjustedRoll, option, ctx);
 
                 foreach (var chunk in chunks)
                 {
-                    await ctx.RespondAsync($"You have rolled: {chunk}.");
+                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"You have rolled: {chunk}."));
                 }
             }
             catch (FormatException ex)
             {
-                await ctx.RespondAsync($"Error: {ex.Message} Input: {input}");
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Error: {ex.Message} option: {option}"));
             }
             finally
             {
                 if (!success)
                 {
-                    await ctx.RespondAsync($"Invalid input format. Please enter a valid dX formula, e.g., \"3 2d6 i+1 o+2\".");
+                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Invalid option format. Please enter a valid dX formula, e.g., \"3 2d6 i+1 o+2\"."));
                 }
             }
         }
     }
 
-    private IEnumerable<string> SplitTextIntoChunks(string text, string input, CommandContext ctx)
+    private IEnumerable<string> SplitTextIntoChunks(string text, string option, CommandContext ctx)
     {
         const int maxChunks = 2; // Maximum number of chunks allowed
         const int maxChunkSize = 1900; // Maximum size of each chunk
@@ -91,7 +94,7 @@ public class Diceroller : BaseCommandModule
                     // Log the error message
                     string userInfo = $"{ctx.User.Username}#{ctx.User.Discriminator} (ID: {ctx.User.Id})";
                     Console.WriteLine($"[WARNING] Exceeded maximum number of chunks. User: {userInfo}");
-                    Console.WriteLine($"Input from RollCommand: {input}");
+                    Console.WriteLine($"option from RollCommand: {option}");
                     // Return an empty list to indicate an error
                     throw new FormatException($"Illegal output length.");
                 }
@@ -101,15 +104,15 @@ public class Diceroller : BaseCommandModule
         }
     }
 
-    public static string DiceRand(string input, bool exo = false, bool includeExpression = true)
+    public static string DiceRand(string option, bool exo = false, bool includeExpression = true)
     {
         // Overrides the value of includeexpression
         if (exo)
         {
             includeExpression = true;
         }
-        // Trim leading and trailing whitespace from the input
-        input = input.Trim();
+        // Trim leading and trailing whitespace from the option
+        option = option.Trim();
 
         // Define the regular expression pattern
         string pattern = @"(?:(\d+)\s+)?(\d+)\s*d\s*(\d+)(?:\s*i([+\-]\d+))?(?:\s*o([+\-]\d+))?(?:\s*g([+\-]\d+))?";
@@ -117,8 +120,8 @@ public class Diceroller : BaseCommandModule
         // Create a new Regex instance with the pattern and options
         Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
 
-        // Match the input string against the regex pattern
-        MatchCollection matches = regex.Matches(input);
+        // Match the option string against the regex pattern
+        MatchCollection matches = regex.Matches(option);
 
         if (matches.Count > 0)
         {
@@ -219,13 +222,8 @@ public class Diceroller : BaseCommandModule
         }
         else
         {
-            // Handle the case where the input does not match the pattern
-            throw new FormatException($"Invalid input format. Input: {input}");
+            // Handle the case where the option does not match the pattern
+            throw new FormatException($"Invalid option format. option: {option}");
         }
-    }
-
-    internal static IEnumerable<string?> SplitTextIntoChunks(string adjustedRoll, string input, InteractionContext ctx)
-    {
-        throw new NotImplementedException();
     }
 }

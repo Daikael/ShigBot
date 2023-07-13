@@ -17,7 +17,9 @@ namespace ShigBot.Commands
         public async Task CommandsCommand(CommandContext ctx)
         {
             string commandslistmessage = "The currently recorded list of commands are as follows.\n\n"
-                + "Roll, Guide, Commands.";
+                + "Roll, A dice roller, will take a given input and give you a list of all rolls and their modifiers."
+                + "Guide, A simple explanation on how to use commands."
+                + "Commands, a list of commands and what they do.";
             await ctx.RespondAsync(commandslistmessage);
         }
     }
