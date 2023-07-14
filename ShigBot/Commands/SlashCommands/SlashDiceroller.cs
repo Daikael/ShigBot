@@ -15,7 +15,7 @@ public class SlashDiceroller : ApplicationCommandModule
     public bool includeExpression = true;
 
     [Command("Roll")]
-    public async Task RollCommand(InteractionContext ctx, [RemainingText] string option)
+    public async Task<string> RollCommand(InteractionContext ctx, [RemainingText] string option)
     {
         Console.WriteLine("Test2");
         if (option.Trim().Equals("help", StringComparison.OrdinalIgnoreCase))
@@ -35,6 +35,8 @@ public class SlashDiceroller : ApplicationCommandModule
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(helpMessage).AsEphemeral(true));
         }
         else
+            Console.WriteLine("test3");
+        Console.WriteLine(option);
         {
             // Check if option ends with "-ex" to set includeExpression
             includeExpression = !option.Trim().EndsWith("-ex");
@@ -43,16 +45,20 @@ public class SlashDiceroller : ApplicationCommandModule
 
             try
             {
-                string adjustedRoll = Diceroller.DiceRand(option);
+                string adjustedRoll = DiceRand(option);
                 success = true;
 
                 // Split the output into smaller chunks
-                var chunks = Diceroller.SplitTextIntoChunks(adjustedRoll, option, ctx);
+                var chunks = SplitTextIntoChunks(adjustedRoll, option, ctx);
 
+                var sb = new StringBuilder();
                 foreach (var chunk in chunks)
                 {
-                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"You have rolled: {chunk}."));
+                    sb.AppendLine($"You have rolled: {chunk}.");
                 }
+                string result = sb.ToString().TrimEnd();
+                Console.WriteLine(result);
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(result));
             }
             catch (FormatException ex)
             {
@@ -66,9 +72,12 @@ public class SlashDiceroller : ApplicationCommandModule
                 }
             }
         }
+
+        // Return an empty string as a default value
+        return "";
     }
 
-    private IEnumerable<string> SplitTextIntoChunks(string text, string option, CommandContext ctx)
+    private IEnumerable<string> SplitTextIntoChunks(string text, string option, InteractionContext ctx)
     {
         const int maxChunks = 2; // Maximum number of chunks allowed
         const int maxChunkSize = 1900; // Maximum size of each chunk
