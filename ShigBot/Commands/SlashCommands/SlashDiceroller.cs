@@ -17,7 +17,7 @@ public class SlashDiceroller : ApplicationCommandModule
     [Command("Roll")]
     public async Task<string> RollCommand(InteractionContext ctx, [RemainingText] string option)
     {
-        Console.WriteLine("Test2");
+        //Console.WriteLine("Test2");
         if (option.Trim().Equals("help", StringComparison.OrdinalIgnoreCase))
         {
             // Help message handling
@@ -35,8 +35,8 @@ public class SlashDiceroller : ApplicationCommandModule
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(helpMessage).AsEphemeral(true));
         }
         else
-            Console.WriteLine("test3");
-        Console.WriteLine(option);
+            //Console.WriteLine("test3");
+            Console.WriteLine(option);
         {
             // Check if option ends with "-ex" to set includeExpression
             includeExpression = !option.Trim().EndsWith("-ex");
@@ -57,7 +57,7 @@ public class SlashDiceroller : ApplicationCommandModule
                     sb.AppendLine($"You have rolled: {chunk}.");
                 }
                 string result = sb.ToString().TrimEnd();
-                Console.WriteLine(result);
+                //Console.WriteLine(result);
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(result));
             }
             catch (FormatException ex)
